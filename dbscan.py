@@ -31,7 +31,17 @@ class DBSCAN:
         self.distFunc = distFunc
         
     def cluster(self, points):
-        pass
+        npts = points.shape[0]
+        label_col = -np.ones((npts, 1))
+        all_points = np.hstack((points, label_col))
+        #print("starting:\n", all_points)
+        for point in all_points:
+            label = point[2]
+            if label != -1: continue # Previously processed in inner loop
+            neighbors = self.rangeQuery(all_points, point) # Find neighbors
+            if neighbors.shape[0] < self.minPts: # Density check
+                point[2] = 0 # Label as Noise
+                continue
         
     def rangeQuery(self, points: np.ndarray, p: np.ndarray) -> np.ndarray:
         # Dimension sanity checking
@@ -60,7 +70,9 @@ if __name__ == "__main__":
     x = np.random.rand(10, 2)
     print("original\n", x)
     eps = 0.8
-    minPts = 10
+    minPts = 5
     dbscan = DBSCAN(eps, minPts)
-    points_in_range = dbscan.rangeQuery(x, np.array([0, 0]))
-    print("filtered\n", points_in_range)
+    #points_in_range = dbscan.rangeQuery(x, np.array([0, 0]))
+    #print("filtered\n", points_in_range)
+    print("added label")
+    dbscan.cluster(x)
