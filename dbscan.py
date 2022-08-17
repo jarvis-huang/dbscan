@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import linalg as LA
 from typing import Callable
+from partgen import ParticleGenerator, ParticleVisualizer
 
 # TODO
 # - [ ] Use named columns or DataFrame
@@ -69,7 +70,8 @@ class DBSCAN:
                             # merge more_neighbors into seedset
                             seedset = np.append(seedset, more_neighbors)
                     seedset = seedset[1:]  # delete current point from seedset
-        print("final:\n", all_points)                
+        print("final:\n", all_points)
+        return all_points              
 
     # Returns indices of neighbors
     def rangeQuery(self, points: np.ndarray, p: np.ndarray) -> np.ndarray:
@@ -98,15 +100,20 @@ class DBSCAN:
 if __name__ == "__main__":
     # suppress printing in scientific notation
     np.set_printoptions(suppress=True)
-    
+    max_bound = 10
+    pg = ParticleGenerator(max_bound=max_bound, \
+                           num_particles=100, n_clusters=4)
+    particles = pg.getParticles()
     # x = np.random.rand(10, 2)
-    x = np.array([[0, 0], [0.1, 0.1], [0.2, 0.2],
-                  [1, 1], [1.1, 1.1], [1.2, 1.2],
-                  [2, 2], [2.1, 2.1], [2.2, 2.2], [1.9, 1.9]])
+    # x = np.array([[0, 0], [0.1, 0.1], [0.2, 0.2],
+    #               [1, 1], [1.1, 1.1], [1.2, 1.2],
+    #               [2, 2], [2.1, 2.1], [2.2, 2.2], [1.9, 1.9]])
     # print("original\n", x)
-    eps = 0.5
-    minPts = 2
+    eps = 0.8
+    minPts = 5
     dbscan = DBSCAN(eps, minPts)
     # points_in_range = dbscan.rangeQuery(x, np.array([2, 2))
     # print("filtered\n", points_in_range)
-    dbscan.cluster(x)
+    particles_clustered = dbscan.cluster(particles)
+    pv = ParticleVisualizer(max_bound=max_bound)
+    pv.showParticles(particles_clustered)
