@@ -7,6 +7,7 @@ from typing import Callable
 # - [ ] Create a class for data point with cluster x, y, label
 # - [ ] Add unit tests.
 
+
 def myDistance(p1: np.ndarray, p2: np.ndarray):
     assert p1.ndim == p2.ndim
     if p1.ndim == 1 or p1.ndim == 2:
@@ -44,27 +45,30 @@ class DBSCAN:
         print("starting:\n", all_points)
         for i, point in enumerate(all_points):
             label = point[2]
-            if label != -1: continue # Previously processed in inner loop
-            neighbors = self.rangeQuery(all_points[:, :2], point[:2]) # Find neighbors
-            if neighbors.size < self.minPts: # Density check
-                point[2] = 0 # Label as Noise
+            if label != -1:
+                continue  # Previously processed in inner loop
+            neighbors = self.rangeQuery(points, point[:2])  # Find neighbors
+            if neighbors.size < self.minPts:  # Density check
+                point[2] = 0  # Label as Noise
                 continue
             else:
-                C += 1 # next cluster label
-                point[2] = C # Label initial point
-                #print(f"seed={point[0]:.1f}, {point[1]:.1f}")
+                C += 1  # next cluster label
+                point[2] = C  # Label initial point
+                # print(f"seed={point[0]:.1f}, {point[1]:.1f}")
                 seedset = neighbors
-                #print("seedset=\n", seedset)
-                while seedset.size > 0: # if not empty, explore & expand seedset
+                # print("seedset=\n", seedset)
+                while seedset.size > 0:
+                    # While not empty, explore & expand seedset
                     q = all_points[seedset[0]]
-                    #print(f"q={q[0]:.1f}, {q[1]:.1f}")
-                    if q[2] <= 0: # Not previously processed
-                        q[2] = C # assign cluster label in seedset and original DB
-                        more_neighbors = self.rangeQuery(all_points[:, :2], q[:2]) # Find neighbors
+                    # print(f"q={q[0]:.1f}, {q[1]:.1f}")
+                    if q[2] <= 0:  # Not previously processed
+                        q[2] = C  # assign cluster label (will also 
+                                  # modify all_points)
+                        more_neighbors = self.rangeQuery(points, q[:2]) # Find neighbors
                         if more_neighbors.size >= self.minPts: # Density check
                             # merge more_neighbors into seedset
                             seedset = np.append(seedset, more_neighbors)
-                    seedset = seedset[1:] # delete current point from seedset
+                    seedset = seedset[1:]  # delete current point from seedset
         print("final:\n", all_points)                
 
     # Returns indices of neighbors
@@ -87,18 +91,22 @@ class DBSCAN:
             points_in_range = np.empty(0)
             for i, point in enumerate(points):
                 if self.distFunc(point, p) <= self.eps:
-                    points_in_range = np.append(points_in_range,i)
+                    points_in_range = np.append(points_in_range, i)
             return points_in_range
 
 
 if __name__ == "__main__":
-    np.set_printoptions(suppress=True) # suppress printing in scientific notation
-    #x = np.random.rand(10, 2)
-    x = np.array([[0,0],[0.1,0.1],[0.2,0.2],[1,1],[1.1,1.1],[1.2,1.2],[2,2],[2.1,2.1],[2.2,2.2],[1.9,1.9]])
-    #print("original\n", x)
+    # suppress printing in scientific notation
+    np.set_printoptions(suppress=True)
+    
+    # x = np.random.rand(10, 2)
+    x = np.array([[0, 0], [0.1, 0.1], [0.2, 0.2],
+                  [1, 1], [1.1, 1.1], [1.2, 1.2],
+                  [2, 2], [2.1, 2.1], [2.2, 2.2], [1.9, 1.9]])
+    # print("original\n", x)
     eps = 0.5
     minPts = 2
     dbscan = DBSCAN(eps, minPts)
-    #points_in_range = dbscan.rangeQuery(x, np.array([2, 2))
-    #print("filtered\n", points_in_range)
+    # points_in_range = dbscan.rangeQuery(x, np.array([2, 2))
+    # print("filtered\n", points_in_range)
     dbscan.cluster(x)
