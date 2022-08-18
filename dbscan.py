@@ -103,7 +103,7 @@ if __name__ == "__main__":
     max_bound = 10
     pg = ParticleGenerator(max_bound=max_bound, \
                            num_particles=100, n_clusters=4)
-    particles = pg.getParticles()
+    particles = pg.particles
     # x = np.random.rand(10, 2)
     # x = np.array([[0, 0], [0.1, 0.1], [0.2, 0.2],
     #               [1, 1], [1.1, 1.1], [1.2, 1.2],
@@ -116,4 +116,4 @@ if __name__ == "__main__":
     # print("filtered\n", points_in_range)
     particles_clustered = dbscan.cluster(particles)
     pv = ParticleVisualizer(max_bound=max_bound)
-    pv.showParticles(particles_clustered)
+    pv.showParticles(particles_clustered, pg.centers)

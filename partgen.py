@@ -10,7 +10,6 @@ class ParticleGenerator:
         
         # pick cluster centers
         self.centers = self.genClusterCenters(n_clusters)
-        self.showCenters(self.centers)
         
         # generate particles for each cluster
         avg_particles = num_particles / n_clusters
@@ -57,12 +56,6 @@ class ParticleGenerator:
                 break
         return picks
         
-    def showCenters(self, centers):
-        plt.plot(centers[:,0], centers[:,1], 'ro', markersize=4)
-        plt.grid(True)
-        plt.axis("square")
-        plt.xlim([0, self.side])
-        plt.ylim([0, self.side])
         
     # returns (count x 2) array
     def genParticles(self, center, count):
@@ -78,9 +71,6 @@ class ParticleGenerator:
         particles = particles[particles[:, 1] < self.side]
         return particles
         
-    def getParticles(self):
-        return self.particles
-        
         
 
 class ParticleVisualizer:
@@ -88,10 +78,18 @@ class ParticleVisualizer:
         self.side = max_bound
         self.colors = "krgbcmy"
         
-    def showParticles(self, particles):
-        fig = plt.figure()
+    def showParticles(self, particles, centers = None):
+        fig = plt.figure(figsize=(6, 10))
+        ax = fig.subplots(2,1)
+        # Plot particles before clustering
+        ax[0].plot(particles[:,0], particles[:,1], 'ko', markersize=2)
+        if centers is not None:
+            # plot original cluster centers in red
+            ax[0].plot(centers[:,0], centers[:,1], 'ro', markersize=2)
+        
+        # Plot particles after clustering
         if particles.shape[1] == 2:  # no cluster info
-            plt.plot(particles[:,0], particles[:,1], 'ko', markersize=2)
+            ax[1].plot(particles[:,0], particles[:,1], 'ko', markersize=2)
         else:  # has cluster info
             max_cluster = int(np.max(particles[:, 2]))
             if max_cluster > len(self.colors)-1:
@@ -100,12 +98,14 @@ class ParticleVisualizer:
             for particle in particles:
                 cluster_id = int(particle[-1])
                 c = self.colors[cluster_id]
-                plt.plot(particle[0], particle[1], c+'o', markersize=2)
-        plt.grid(True)
-        plt.axis("square")
-        plt.xlim([0, self.side])
-        plt.ylim([0, self.side])
-        plt.title(f"num_clusters={max_cluster:d}")
+                ax[1].plot(particle[0], particle[1], c+'o', markersize=2)
+        for ax_ in ax:
+            ax_.grid(True)
+            ax_.axis("square")
+            ax_.set_xlim([0, self.side])
+            ax_.set_ylim([0, self.side])
+        ax[0].set_title(f"before clustering")
+        ax[1].set_title(f"num_clusters={max_cluster:d}")
         plt.waitforbuttonpress(0)
         plt.close(fig)
 
