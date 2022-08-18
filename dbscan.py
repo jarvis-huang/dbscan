@@ -1,11 +1,13 @@
 import numpy as np
 from numpy import linalg as LA
 from typing import Callable
+from partgen import ParticleGenerator, ParticleVisualizer
 
 # TODO
 # - [ ] Use named columns or DataFrame
 # - [ ] Create a class for data point with cluster x, y, label
 # - [ ] Add unit tests.
+
 
 def myDistance(p1: np.ndarray, p2: np.ndarray):
     assert p1.ndim == p2.ndim
@@ -38,69 +40,80 @@ class DBSCAN:
         C = 0
         npts = points.shape[0]
         label_col = -np.ones((npts, 1))
-        index_col = np.arange(npts)[:, None]
-        # x, y, label, index
+        # x, y, label
         # label (-1: unprocessed, 0: noise, >=1: assigned cluster)
-        all_points = np.hstack((points, label_col, index_col))
-        #print("starting:\n", all_points)
-        for point in all_points:
+        all_points = np.hstack((points, label_col))
+        print("starting:\n", all_points)
+        for i, point in enumerate(all_points):
             label = point[2]
-            if label != -1: continue # Previously processed in inner loop
-            neighbors = self.rangeQuery(all_points, point) # Find neighbors
-            if neighbors.shape[0] < self.minPts: # Density check
-                point[2] = 0 # Label as Noise
+            if label != -1:
+                continue  # Previously processed in inner loop
+            neighbors = self.rangeQuery(points, point[:2])  # Find neighbors
+            if neighbors.size < self.minPts:  # Density check
+                point[2] = 0  # Label as Noise
                 continue
             else:
-                C += 1 # next cluster label
-                point[2] = C # Label initial point
+                C += 1  # next cluster label
+                point[2] = C  # Label initial point
+                # print(f"seed={point[0]:.1f}, {point[1]:.1f}")
                 seedset = neighbors
-                while seedset.size > 0: # if not empty, explore & expand seedset
-                    q = seedset[0, :]
-                    if q[2] <= 0: # Not previously processed
-                        q[2] = C # assign cluster label in seedset
-                        index = q[-1]
-                        all_points[index, 2] = C # assign cluster label in original DB
-                        more_neighbors = self.rangeQuery(all_points, q) # Find neighbors
-                        if more_neighbors.shape[0] >= self.minPts: # Density check
+                # print("seedset=\n", seedset)
+                while seedset.size > 0:
+                    # While not empty, explore & expand seedset
+                    q = all_points[seedset[0]]
+                    # print(f"q={q[0]:.1f}, {q[1]:.1f}")
+                    if q[2] <= 0:  # Not previously processed
+                        q[2] = C  # assign cluster label (will also 
+                                  # modify all_points)
+                        more_neighbors = self.rangeQuery(points, q[:2]) # Find neighbors
+                        if more_neighbors.size >= self.minPts: # Density check
                             # merge more_neighbors into seedset
-                            seedset = np.vstack((seedset, more_neighbors))
-                    seedset = seedset[1:, :] # delete current point from seedset
-                            
-        
+                            seedset = np.append(seedset, more_neighbors)
+                    seedset = seedset[1:]  # delete current point from seedset
+        print("final:\n", all_points)
+        return all_points              
+
+    # Returns indices of neighbors
     def rangeQuery(self, points: np.ndarray, p: np.ndarray) -> np.ndarray:
         # Dimension sanity checking
-        assert p.size == 4
+        assert p.size == 2
         assert points.ndim == 1 or points.ndim == 2
         if points.ndim == 1:
-            assert points.size == 4
+            assert points.size == 2
         if points.ndim == 2:
-            assert points.shape[1] == 4
+            assert points.shape[1] == 2
 
         # standard L2-norm distance func
         if self.distFunc is None:
-            difference = points[:, :2] - p[:2]
+            difference = points - p
             distancia = LA.norm(difference, axis=1)
-            return np.squeeze(points[np.argwhere(distancia <= self.eps)])
+            return np.squeeze(np.argwhere(distancia <= self.eps))
         # custom distance func
         else:
-            points_in_range = np.empty((0, 4))
-            for point in points:
-                if self.distFunc(point[:2], p[:2]) <= self.eps:
-                    points_in_range = np.vstack((points_in_range, point))
+            points_in_range = np.empty(0)
+            for i, point in enumerate(points):
+                if self.distFunc(point, p) <= self.eps:
+                    points_in_range = np.append(points_in_range, i)
             return points_in_range
 
 
 if __name__ == "__main__":
-    np.set_printoptions(suppress=True) # suppress printing in scientific notation
-    x = np.empty((10,4))
-    x[:, :2] = np.random.rand(10, 2)
-    x[:, 2] = -1
-    x[:, 3] = range(10)
-    print("original\n", x)
+    # suppress printing in scientific notation
+    np.set_printoptions(suppress=True)
+    max_bound = 10
+    pg = ParticleGenerator(max_bound=max_bound, \
+                           num_particles=100, n_clusters=4)
+    particles = pg.getParticles()
+    # x = np.random.rand(10, 2)
+    # x = np.array([[0, 0], [0.1, 0.1], [0.2, 0.2],
+    #               [1, 1], [1.1, 1.1], [1.2, 1.2],
+    #               [2, 2], [2.1, 2.1], [2.2, 2.2], [1.9, 1.9]])
+    # print("original\n", x)
     eps = 0.8
     minPts = 5
     dbscan = DBSCAN(eps, minPts)
-    points_in_range = dbscan.rangeQuery(x, np.array([0, 0]))
-    print("filtered\n", points_in_range)
-    #print("added label")
-    #dbscan.cluster(x)
+    # points_in_range = dbscan.rangeQuery(x, np.array([2, 2))
+    # print("filtered\n", points_in_range)
+    particles_clustered = dbscan.cluster(particles)
+    pv = ParticleVisualizer(max_bound=max_bound)
+    pv.showParticles(particles_clustered)

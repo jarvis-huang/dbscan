@@ -39,9 +39,6 @@ class ParticleGenerator:
         print(f"before filtering = {self.particles.shape[0]}")
         self.particles = self.filterParticles(self.particles)
         print(f"after filtering = {self.particles.shape[0]}")
-        
-        # show particles
-        self.showParticles(self.particles)
 
     def genClusterCenters(self, n_clusters):
         min_separation = self.side * 1.414 / n_clusters
@@ -53,7 +50,7 @@ class ParticleGenerator:
                 diff = picks - picks[i,:]
                 diff = np.vstack((diff[:i, :], diff[i+1:, :]))
                 d = LA.norm(diff, axis=1)
-                if np.min(d) > min_separation:
+                if np.min(d) < min_separation:
                     success = False
                     break
             if success:
@@ -81,18 +78,37 @@ class ParticleGenerator:
         particles = particles[particles[:, 1] < self.side]
         return particles
         
+    def getParticles(self):
+        return self.particles
+        
+        
+
+class ParticleVisualizer:
+    def __init__(self, max_bound):
+        self.side = max_bound
+        self.colors = "krgbcmy"
         
     def showParticles(self, particles):
-        plt.plot(particles[:,0], particles[:,1], 'ko', markersize=2)
+        fig = plt.figure()
+        if particles.shape[1] == 2:  # no cluster info
+            plt.plot(particles[:,0], particles[:,1], 'ko', markersize=2)
+        else:  # has cluster info
+            max_cluster = int(np.max(particles[:, 2]))
+            if max_cluster > len(self.colors)-1:
+                print(f"Too many clusters ({max_cluster:d}).")
+                return
+            for particle in particles:
+                cluster_id = int(particle[-1])
+                c = self.colors[cluster_id]
+                plt.plot(particle[0], particle[1], c+'o', markersize=2)
         plt.grid(True)
         plt.axis("square")
         plt.xlim([0, self.side])
         plt.ylim([0, self.side])
-        
-
+        plt.title(f"num_clusters={max_cluster:d}")
+        plt.waitforbuttonpress(0)
+        plt.close(fig)
 
 if __name__ == "__main__":
-    fig = plt.figure()
     pg = ParticleGenerator(max_bound=10.0, num_particles=100, n_clusters=4)
-    plt.waitforbuttonpress(0)
-    plt.close(fig)
+
