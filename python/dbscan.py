@@ -36,7 +36,7 @@ class DBSCAN:
         self.minPts = minPts
         self.distFunc = distFunc
         
-    def cluster(self, points):
+    def cluster(self, points: np.ndarray):
         C = 0
         npts = points.shape[0]
         label_col = -np.ones((npts, 1))
