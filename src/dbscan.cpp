@@ -4,28 +4,12 @@
 #include <deque>
 #include <cmath>
 #include <boost/format.hpp>
+#include "dbscan/matplotlibcpp.h" // Plotting
+#include "dbscan/utils.h" // utility functions
 
 using std::vector;
 using std::deque;
 using std::string;
-
-class Point {
-  public:
-    float x;
-    float y;
-    int cid; // -1: initial, 0: noise, 1+: assigned
-    Point(float x_, float y_, int cid_ = -1) {
-        x = x_;
-        y = y_;
-        cid = cid_;
-    }
-    
-    float dist(const Point& p2) const {
-        float dx = x - p2.x;
-        float dy = y - p2.y;
-        return hypot(dx, dy);
-    }
-};
 
 
 class DBSCAN {
@@ -115,4 +99,7 @@ int main() {
     //Point p_query(2, 2);
     //float eps = 0.25;
     //rangeQuery(points, p_query, eps);
+    
+    float max_bound = 10.0f;
+    Utils::visualizeParticles(points, max_bound);
 }
