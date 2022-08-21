@@ -6,6 +6,7 @@
 #include <boost/format.hpp>
 #include "dbscan/matplotlibcpp.h" // Plotting
 #include "dbscan/utils.h" // utility functions
+#include "dbscan/partgen.h" // data generation
 
 using std::vector;
 using std::deque;
@@ -75,6 +76,12 @@ class DBSCAN {
 
 
 int main() {
+    float max_bound = 10.0f;
+    int num_particles = 100;
+    int n_clusters = 5;
+    ParticleGenerator partgen(max_bound, num_particles, n_clusters);
+    return 0;
+    
     vector<Point> points;
     points.push_back(Point(0, 0));
     points.push_back(Point(0.1, 0.1));
@@ -100,6 +107,6 @@ int main() {
     //float eps = 0.25;
     //rangeQuery(points, p_query, eps);
     
-    float max_bound = 10.0f;
+    
     Utils::visualizeParticles(points, max_bound);
 }
