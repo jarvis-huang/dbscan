@@ -1,5 +1,8 @@
 #include <iostream>
 #include <Eigen/Dense>
+#include <boost/format.hpp>
+#include <boost/random.hpp>
+#include <boost/random/normal_distribution.hpp>
 #include "dbscan/partgen.h"
 
 
@@ -14,6 +17,19 @@ void removeRow(Eigen::MatrixXf& matrix, unsigned int rowToRemove)
     matrix.conservativeResize(numRows,numCols);
 }
 
+class NormalDist {
+  private:
+    boost::mt19937 rng;
+    boost::normal_distribution<> nd;
+  public:
+    NormalDist(float mean = 0.0f, float sd = 1.0f) {
+        nd = boost::normal_distribution<>(mean, sd);
+    }
+    float sample() {
+        return nd(rng);
+    }
+};
+
 ParticleGenerator::ParticleGenerator(float max_bound, int num_particles, int n_clusters) {
     max_bound_m = max_bound;
     num_particles_m = num_particles;
@@ -23,38 +39,60 @@ ParticleGenerator::ParticleGenerator(float max_bound, int num_particles, int n_c
         
     // pick cluster centers
     centers_m = genClusterCenters();
-    
-    std::cout << "cluster centers = " << centers_m << std::endl;
+    std::cout << "cluster centers: \n" << centers_m << std::endl;
     
     // generate particles for each cluster
-    /*
-    avg_particles = num_particles / n_clusters
-    print(f"n_clusters={n_clusters}, avg_particles={avg_particles}")
-    while True:
-        self.particles = np.empty((0 ,2))
-        counts = avg_particles + np.random.randn(n_clusters-1)*avg_particles/6
-        if sum(counts)<num_particles:
-            # accept this sampling
-            running = 0
-            for i in range(n_clusters-1):
-                count = int(np.round(counts[i]))
-                center = self.centers[i,:]
-                parts = self.genParticles(center, count)
-                self.particles = np.vstack((self.particles, parts))
-                running+=count
+    float avg_particles = static_cast<float>(num_particles) / n_clusters;
+    std::cout << boost::format("n_clusters=%d, avg_particles=%.1f\n") % n_clusters % avg_particles;
+    
+    NormalDist nd;
+    while (true) {
+        particles_m.clear();
+        vector<int> counts; // num. of particles for each cluster
+        int total = 0;
+        for (int i = 0; i<n_clusters-1; i++) {
+            int this_count = static_cast<int>(avg_particles + nd.sample() * avg_particles/6);
+            counts.push_back(this_count);
+            total += this_count;
+        }
+        if (total<num_particles) {
+            // accept this sampling
+            int running = 0;
+            for (int j = 0; j<n_clusters-1; j++) {
+                vector<Point> parts = genParticles(centers_m.row(j), counts[j]);
+                particles_m.insert(particles_m.end(), parts.begin(), parts.end());
+                running += counts[j];
+            }
             
-            count = num_particles - running
-            center = self.centers[-1,:]
-            parts = self.genParticles(center, count)
-            self.particles = np.vstack((self.particles, parts))
-            
-            break
+            int rem_count = num_particles - running;
+            vector<Point> parts  = genParticles(centers_m.row(n_clusters_m-1), rem_count);
+            particles_m.insert(particles_m.end(), parts.begin(), parts.end());
+            break;
+        }
+    }
         
+    /*
     # filter particles so that all fit in [0, max_bound) bound
     print(f"before filtering = {self.particles.shape[0]}")
     self.particles = self.filterParticles(self.particles)
     print(f"after filtering = {self.particles.shape[0]}")
     */
+}
+
+vector<Point> ParticleGenerator::genParticles(Eigen::VectorXf center, int count) {
+    std::cout << boost::format("count=%d\n") % count;
+    NormalDist nd;
+    float sigma = max_bound_m / 15;
+    vector<Point> points;
+    float center_x = center(0);
+    float center_y = center(1);
+    std::cout << boost::format("center=(%.2f, %.2f), count=%d\n") % center_x % center_y % count;
+    for (int i=0; i<count; i++) {
+        float x = nd.sample() * sigma + center_x;
+        float y = nd.sample() * sigma + center_y;
+        points.push_back(Point(x, y));
+    }
+    return points;
 }
 
 Eigen::MatrixXf ParticleGenerator::genClusterCenters() {

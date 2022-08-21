@@ -80,6 +80,7 @@ int main() {
     int num_particles = 100;
     int n_clusters = 5;
     ParticleGenerator partgen(max_bound, num_particles, n_clusters);
+    Utils::visualizeParticles(partgen.getParticles(), max_bound);
     return 0;
     
     vector<Point> points;
