@@ -1,8 +1,6 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <boost/format.hpp>
-#include <boost/random.hpp>
-#include <boost/random/normal_distribution.hpp>
 #include "dbscan/partgen.h"
 
 
@@ -17,18 +15,6 @@ void removeRow(Eigen::MatrixXf& matrix, unsigned int rowToRemove)
     matrix.conservativeResize(numRows,numCols);
 }
 
-class NormalDist {
-  private:
-    boost::mt19937 rng;
-    boost::normal_distribution<> nd;
-  public:
-    NormalDist(float mean = 0.0f, float sd = 1.0f) {
-        nd = boost::normal_distribution<>(mean, sd);
-    }
-    float sample() {
-        return nd(rng);
-    }
-};
 
 ParticleGenerator::ParticleGenerator(float max_bound, int num_particles, int n_clusters) {
     max_bound_m = max_bound;
@@ -39,19 +25,18 @@ ParticleGenerator::ParticleGenerator(float max_bound, int num_particles, int n_c
         
     // pick cluster centers
     centers_m = genClusterCenters();
-    std::cout << "cluster centers: \n" << centers_m << std::endl;
+    //std::cout << "cluster centers: \n" << centers_m << std::endl;
     
     // generate particles for each cluster
     float avg_particles = static_cast<float>(num_particles) / n_clusters;
     std::cout << boost::format("n_clusters=%d, avg_particles=%.1f\n") % n_clusters % avg_particles;
     
-    NormalDist nd;
     while (true) {
         particles_m.clear();
         vector<int> counts; // num. of particles for each cluster
         int total = 0;
         for (int i = 0; i<n_clusters-1; i++) {
-            int this_count = static_cast<int>(avg_particles + nd.sample() * avg_particles/6);
+            int this_count = static_cast<int>(avg_particles + nd_m.sample() * avg_particles/6);
             counts.push_back(this_count);
             total += this_count;
         }
@@ -80,17 +65,17 @@ ParticleGenerator::ParticleGenerator(float max_bound, int num_particles, int n_c
 }
 
 vector<Point> ParticleGenerator::genParticles(Eigen::VectorXf center, int count) {
-    std::cout << boost::format("count=%d\n") % count;
-    NormalDist nd;
     float sigma = max_bound_m / 15;
     vector<Point> points;
     float center_x = center(0);
     float center_y = center(1);
     std::cout << boost::format("center=(%.2f, %.2f), count=%d\n") % center_x % center_y % count;
     for (int i=0; i<count; i++) {
-        float x = nd.sample() * sigma + center_x;
-        float y = nd.sample() * sigma + center_y;
-        points.push_back(Point(x, y));
+        float x = nd_m.sample() * sigma + center_x;
+        float y = nd_m.sample() * sigma + center_y;
+        // Filter away out-of-bound particles
+        if (0<=x && x<=max_bound_m && 0<=y && y<=max_bound_m)
+            points.push_back(Point(x, y));
     }
     return points;
 }

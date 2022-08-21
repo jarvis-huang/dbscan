@@ -3,9 +3,25 @@
 
 #include <vector>
 #include <Eigen/Dense>
+#include <boost/random.hpp>
+#include <boost/random/normal_distribution.hpp>
 #include "dbscan/utils.h"
 
 using std::vector;
+
+
+class NormalDist {
+  private:
+    boost::mt19937 rng;
+    boost::normal_distribution<> nd;
+  public:
+    NormalDist(float mean = 0.0f, float sd = 1.0f) {
+        nd = boost::normal_distribution<>(mean, sd);
+    }
+    float sample() {
+        return nd(rng);
+    }
+};
 
 
 class ParticleGenerator {
@@ -15,6 +31,7 @@ class ParticleGenerator {
     int n_clusters_m;
     Eigen::MatrixXf centers_m;
     vector<Point> particles_m;
+    NormalDist nd_m;
     // private functions
     Eigen::MatrixXf genClusterCenters();
     vector<Point> genParticles(Eigen::VectorXf center, int count);
