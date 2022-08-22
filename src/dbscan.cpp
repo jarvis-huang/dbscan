@@ -4,6 +4,7 @@
 #include <deque>
 #include <cmath>
 #include <boost/format.hpp>
+#include <boost/timer/timer.hpp>
 #include "dbscan/matplotlibcpp.h" // Plotting
 #include "dbscan/utils.h" // utility functions
 #include "dbscan/partgen.h" // data generation
@@ -77,12 +78,13 @@ class DBSCAN {
 
 int main() {
     float max_bound = 10.0f;
-    int num_particles = 100;
+    int num_particles = 500;
     int n_clusters = 5;
+    boost::timer::auto_cpu_timer t(6, "%t sec CPU\n");
     ParticleGenerator partgen(max_bound, num_particles, n_clusters);
-    Utils::visualizeParticles(partgen.getParticles(), max_bound);
-    return 0;
+    vector<Point> points = partgen.getParticles();
     
+    /*
     vector<Point> points;
     points.push_back(Point(0, 0));
     points.push_back(Point(0.1, 0.1));
@@ -94,20 +96,21 @@ int main() {
     points.push_back(Point(2.1, 2.1));
     points.push_back(Point(1.9, 1.9));
     points.push_back(Point(1.2, 1.2));
+    */
     
-    float eps = 0.3;
-    size_t minPts = 3;
+    float eps = 0.8; //0.3;
+    size_t minPts = 5; //3;
+    //boost::timer::auto_cpu_timer* t = new boost::timer::auto_cpu_timer(3, "%t sec CPU");
+    //boost::timer::auto_cpu_timer t(3, "%t sec CPU");
     DBSCAN dbscan(eps, minPts);
     dbscan.cluster(points);
+    return 0;
+    //delete t;
     std::cout << "---\n";
     std::cout << boost::format("(x, y) cluster_id\n");
     for (auto p: points) {
         std::cout << boost::format("(%.1f, %.1f) %d\n") % p.x % p.y % p.cid;
     }
-    //Point p_query(2, 2);
-    //float eps = 0.25;
-    //rangeQuery(points, p_query, eps);
-    
-    
+
     Utils::visualizeParticles(points, max_bound);
 }

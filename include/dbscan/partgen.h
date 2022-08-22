@@ -39,7 +39,6 @@ class ParticleGenerator {
   public:
     ParticleGenerator(float max_bound, int num_particles, int n_clusters);
     vector<Point> getParticles() const {return particles_m;}
-    //~ParticleGenerator();
 };
 
 
