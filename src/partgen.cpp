@@ -17,9 +17,13 @@ void removeRow(Eigen::MatrixXf& matrix, unsigned int rowToRemove)
 
 
 ParticleGenerator::ParticleGenerator(float max_bound, int num_particles, int n_clusters) {
+    // Seed Eigen's rng
+    srand((unsigned int)time(NULL));
+    
     max_bound_m = max_bound;
     num_particles_m = num_particles;
     n_clusters_m = n_clusters;
+    std::cout << boost::format("n_clusters=%d, num_particles=%d\n") % n_clusters % num_particles;
     
     assert (1 <= n_clusters_m && n_clusters_m <= 10);
         
@@ -29,7 +33,7 @@ ParticleGenerator::ParticleGenerator(float max_bound, int num_particles, int n_c
     
     // generate particles for each cluster
     float avg_particles = static_cast<float>(num_particles) / n_clusters;
-    std::cout << boost::format("n_clusters=%d, avg_particles=%.1f\n") % n_clusters % avg_particles;
+    //std::cout << boost::format("n_clusters=%d, avg_particles=%.1f\n") % n_clusters % avg_particles;
     
     while (true) {
         particles_m.clear();
@@ -64,12 +68,15 @@ ParticleGenerator::ParticleGenerator(float max_bound, int num_particles, int n_c
     */
 }
 
-vector<Point> ParticleGenerator::genParticles(Eigen::VectorXf center, int count) {
+vector<Point> ParticleGenerator::genParticles(Eigen::VectorXf center, int count, bool printing) {
     float sigma = max_bound_m / 15;
     vector<Point> points;
     float center_x = center(0);
     float center_y = center(1);
-    std::cout << boost::format("center=(%.2f, %.2f), count=%d\n") % center_x % center_y % count;
+    
+    if (printing) {
+        std::cout << boost::format("center=(%.2f, %.2f), count=%d\n") % center_x % center_y % count;
+    }
     for (int i=0; i<count; i++) {
         float x = nd_m.sample() * sigma + center_x;
         float y = nd_m.sample() * sigma + center_y;

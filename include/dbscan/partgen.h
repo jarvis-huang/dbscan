@@ -34,7 +34,7 @@ class ParticleGenerator {
     NormalDist nd_m;
     // private functions
     Eigen::MatrixXf genClusterCenters();
-    vector<Point> genParticles(Eigen::VectorXf center, int count);
+    vector<Point> genParticles(Eigen::VectorXf center, int count, bool printing = false);
      
   public:
     ParticleGenerator(float max_bound, int num_particles, int n_clusters);

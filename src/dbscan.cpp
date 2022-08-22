@@ -43,6 +43,7 @@ class DBSCAN {
         minPts = minPts_;
     }
     
+    /* Modify points with cluster info in-place. */
     void cluster(vector<Point>& points) {
         int C = 0; // current cluster id (valid cluster starts at 1)
         size_t npts = points.size();
@@ -78,9 +79,9 @@ class DBSCAN {
 
 int main() {
     float max_bound = 10.0f;
-    int num_particles = 500;
+    int num_particles = 5000;
     int n_clusters = 5;
-    boost::timer::auto_cpu_timer t(6, "%t sec CPU\n");
+    boost::timer::auto_cpu_timer t(3, "%t sec CPU\n");
     ParticleGenerator partgen(max_bound, num_particles, n_clusters);
     vector<Point> points = partgen.getParticles();
     
@@ -98,19 +99,21 @@ int main() {
     points.push_back(Point(1.2, 1.2));
     */
     
-    float eps = 0.8; //0.3;
-    size_t minPts = 5; //3;
-    //boost::timer::auto_cpu_timer* t = new boost::timer::auto_cpu_timer(3, "%t sec CPU");
-    //boost::timer::auto_cpu_timer t(3, "%t sec CPU");
+    float eps = 0.5; //0.3;
+    size_t minPts = 60; //3;
     DBSCAN dbscan(eps, minPts);
     dbscan.cluster(points);
-    return 0;
-    //delete t;
-    std::cout << "---\n";
-    std::cout << boost::format("(x, y) cluster_id\n");
-    for (auto p: points) {
-        std::cout << boost::format("(%.1f, %.1f) %d\n") % p.x % p.y % p.cid;
+    t.stop();
+    t.report();
+    
+    bool printing = false;
+    if (printing) {
+        std::cout << "---\n";
+        std::cout << boost::format("(x, y) cluster_id\n");
+        for (auto p: points) {
+            std::cout << boost::format("(%.1f, %.1f) %d\n") % p.x % p.y % p.cid;
+        }
     }
-
+    
     Utils::visualizeParticles(points, max_bound);
 }
