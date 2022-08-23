@@ -4,7 +4,6 @@
 #include <deque>
 #include <cmath>
 #include <boost/format.hpp>
-#include <boost/timer/timer.hpp>
 #include "dbscan/matplotlibcpp.h" // Plotting
 #include "dbscan/utils.h" // utility functions
 #include "dbscan/partgen.h" // data generation
@@ -81,7 +80,7 @@ int main() {
     float max_bound = 10.0f;
     int num_particles = 5000;
     int n_clusters = 5;
-    boost::timer::auto_cpu_timer t(3, "%t sec CPU\n");
+    MyTimer t;
     ParticleGenerator partgen(max_bound, num_particles, n_clusters);
     vector<Point> points = partgen.getParticles();
     
@@ -103,8 +102,8 @@ int main() {
     size_t minPts = 60; //3;
     DBSCAN dbscan(eps, minPts);
     dbscan.cluster(points);
-    t.stop();
-    t.report();
+    int ms_elapsed = t.toc();
+    std::cout << boost::format("elapsed %d ms CPU\n") % ms_elapsed;
     
     bool printing = false;
     if (printing) {
@@ -115,5 +114,5 @@ int main() {
         }
     }
     
-    Utils::visualizeParticles(points, max_bound);
+    Utils::visualizeParticles(points, max_bound, 6.0f);
 }
