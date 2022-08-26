@@ -57,7 +57,7 @@ void Utils::visualizeParticles(const vector<Point>& particles, float max_bound, 
         return;
     }
                 
-    plt::figure_size(600, 600);
+    plt::figure_size(800, 800);
     plt::xlim(0.0f, max_bound);
     plt::ylim(0.0f, max_bound);
     plt::axis("equal");
@@ -72,7 +72,7 @@ void Utils::visualizeParticles(const vector<Point>& particles, float max_bound, 
         else
             c = colors.substr(cid, 1);
         plt::plot({x}, {y}, {{"color", c}, {"marker", "o"}, 
-            {"linestyle", ""}, {"markersize", "2"}});
+            {"linestyle", ""}, {"markersize", "1"}});
     }
     plt::show(false); // non-blocking
     plt::pause(pauseT);

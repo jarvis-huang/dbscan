@@ -78,8 +78,8 @@ class DBSCAN {
 
 int main() {
     float max_bound = 10.0f;
-    int num_particles = 5000;
-    int n_clusters = 5;
+    int num_particles = 40000;
+    int n_clusters = 6;
     MyTimer t;
     ParticleGenerator partgen(max_bound, num_particles, n_clusters);
     vector<Point> points = partgen.getParticles();
@@ -99,7 +99,7 @@ int main() {
     */
     
     float eps = 0.5; //0.3;
-    size_t minPts = 60; //3;
+    size_t minPts = 650; //3;
     DBSCAN dbscan(eps, minPts);
     dbscan.cluster(points);
     int ms_elapsed = t.toc();
@@ -114,5 +114,5 @@ int main() {
         }
     }
     
-    Utils::visualizeParticles(points, max_bound, 6.0f);
+    Utils::visualizeParticles(points, max_bound, 10.0f);
 }

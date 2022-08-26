@@ -88,7 +88,7 @@ vector<Point> ParticleGenerator::genParticles(Eigen::VectorXf center, int count,
 }
 
 Eigen::MatrixXf ParticleGenerator::genClusterCenters() {
-    float min_separation = max_bound_m * 1.414 / n_clusters_m;
+    float min_separation = max_bound_m * 1.8 / n_clusters_m;
     Eigen::MatrixXf picks;
     while (true) {
         bool success = true;
