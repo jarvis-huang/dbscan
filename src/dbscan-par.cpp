@@ -7,7 +7,10 @@
 #include "dbscan/matplotlibcpp.h" // Plotting
 #include "dbscan/utils.h" // utility functions
 #include "dbscan/partgen.h" // data generation
+#include <CL/cl.hpp>
+#include "opencl_playground/myocl.hpp"
 
+//#define CL_TARGET_OPENCL_VERSION 120
 using std::vector;
 using std::deque;
 using std::string;
@@ -78,14 +81,23 @@ class DBSCAN {
 
 int main() {
     float max_bound = 10.0f;
-    int num_particles = 40000;
+    int num_particles = 10000;
     int n_clusters = 6;
     MyTimer t;
     ParticleGenerator partgen(max_bound, num_particles, n_clusters);
     vector<Point> points = partgen.getParticles();
     
+    cl::Device default_device = util::getDevice("CPU");
+    cl::Context context({default_device});
+    cl_int err;
+    //cl::Context context(CL_DEVICE_TYPE_CPU, nullptr, nullptr/*&errCallback*/, nullptr, &err);
+    //util::check_error(err, "", "", 0);
+    std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
+    cl::CommandQueue queue(context, default_device);
+    cl::Program program = util::makeProgramFromKernelCode("../src/dbscan.cl", context);
+    
     float eps = 0.5; //0.3;
-    size_t minPts = 650; //3;
+    size_t minPts = 150; //3;
     DBSCAN dbscan(eps, minPts);
     dbscan.cluster(points);
     int ms_elapsed = t.toc();

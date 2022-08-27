@@ -1,2 +1,2 @@
 #/bin/bash
-cd build && make && ./dbscan
+cd build && make && ./dbscan-par
